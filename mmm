@@ -34,6 +34,14 @@ for _, args in ipairs(argss) do
     exchange(args)
 end
 
+local function looploop()
+    while true do
+        check2()
+        exchange()
+        wait(10)
+    end
+end
+
 local function spin(args)
     game:GetService("ReplicatedStorage"):WaitForChild("_NetworkServiceContainer"):WaitForChild("RollService"):FireServer(unpack(args))
     task.wait(1)
