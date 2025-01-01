@@ -75,7 +75,7 @@ local function check()
                 if button then
                     local amount = button:FindFirstChild("Amount")
                     if amount.Text ~= "x0" then
-                        crate_amount.holiday.amount = tonumber(amount.Text:match("x(%d+")) or 0
+                        crate_amount.holiday.amount = tonumber(amount.Text:match("x(%d+)")) or 0
                     end
                 end        
             end    
