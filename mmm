@@ -316,3 +316,5 @@ spawn(function()
         wait(1) -- Wait 1 second before repeating the loop
     end
 end)
+
+print("maybe loaded")
