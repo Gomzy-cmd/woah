@@ -1,0 +1,30 @@
+local candyamount = game:GetService("Players").LocalPlayer.PlayerGui.Main.Menus.HolidayEvent.Content:GetChildren()[9].Text
+
+-- Function to check your candy cane
+local argss = {
+{ "exchangeCandyCanes" }
+}
+
+local function check2()
+    if candyamount and candyamount:IsA("TextLabel") then
+        local candyAmountText = candyamount.Text:match("x(%d+)")  -- Extract the number after "x"
+        if candyAmountText then
+            local candyAmount = tonumber(candyAmountText)
+            if candyAmount and candyAmount >= 50 then
+                roll()  -- Proceed to roll if the candy amount is greater than or equal to 50
+            end
+        end
+    end
+end
+
+-- Function to roll holiday crate
+local function exchange(args)
+    game:GetService("ReplicatedStorage"):WaitForChild("_NetworkServiceContainer"):WaitForChild("InventoryService"):FireServer(unpack(args))
+    task.wait(0.1)
+end
+
+-- Call the exchange function
+for _, args in ipairs(argss) do
+    exchange(args)
+end
+
