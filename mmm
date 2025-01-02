@@ -2,167 +2,6 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
-local tweeningservice = game:GetService("TweenService")
-local hmm = game:GetService("Players").LocalPlayer.PlayerGui.Main.Menus.LootMenu:GetChildren()[5].ScrollingFrame
-local candyamount = game:GetService("Players").LocalPlayer.PlayerGui.Main.Menus.HolidayEvent.Content:GetChildren()[9].Text
-
--- Function to check your candy cane
-local argss = {
-{ "exchangeCandyCanes" }
-}
-
-local function check2()
-    if candyamount and candyamount:IsA("TextLabel") then
-        local candyAmountText = candyamount.Text:match("x(%d+)")  -- Extract the number after "x"
-        if candyAmountText then
-            local candyAmount = tonumber(candyAmountText)
-            if candyAmount and candyAmount >= 50 then
-                roll()  -- Proceed to roll if the candy amount is greater than or equal to 50
-            end
-        end
-    end
-end
-
--- Function to roll holiday crate
-local function exchange(args)
-    game:GetService("ReplicatedStorage"):WaitForChild("_NetworkServiceContainer"):WaitForChild("InventoryService"):FireServer(unpack(args))
-    task.wait(0.1)
-end
-
--- Call the exchange function
-for _, args in ipairs(argss) do
-    exchange(args)
-end
-
-local function looploop()
-    while true do
-        check2()
-        exchange()
-        wait(10)
-    end
-end
-
-local function spin(args)
-    game:GetService("ReplicatedStorage"):WaitForChild("_NetworkServiceContainer"):WaitForChild("RollService"):FireServer(unpack(args))
-    task.wait(1)
-end
-
--- Corrected arguments table to be iterated over
-local arguments = {
-    holiday = { "attemptAuraRoll", "holiday", true },
-    amethyst = { "attemptAuraRoll", "amethyst", true },
-    infernal = { "attemptAuraRoll", "infernal", true },
-    radioactive = { "attemptAuraRoll", "radioactive", true }
-}
-
-local crate_amount = {
-    infernal = { amount = 0 },
-    amethyst = { amount = 0 },
-    holiday = { amount = 0 },
-    radioactive = { amount = 0 }
-}
-
-local function dospin(crateName)
-    -- Only spin for the specific crate passed
-    local crateArgs = arguments[crateName]
-    if crateArgs then
-        spin(crateArgs)
-    else
-        print("No arguments found for crate: " .. crateName)
-    end
-end
-
-local function check()
-    for _, v in ipairs(hmm:GetChildren()) do
-        if v:IsA("ScrollingFrame") and v.Name == "Infernal" then
-            local infernal = v:FindFirstChild("Infernal")
-            if infernal then
-                local button = infernal:FindFirstChild("CrateButton")
-                if button then
-                    local amount = button:FindFirstChild("Amount")
-                    if amount and amount:IsA("TextLabel") then
-                        if amount.Text ~= "x0" then
-                            crate_amount.infernal.amount = tonumber(amount.Text:match("x(%d+)")) or 0
-                        else
-                            print("Infernal crate amount is 0")
-                        end
-                    end
-                end
-            end            
-        elseif v:IsA("ScrollingFrame") and v.Name == "Amethyst" then
-            local amethyst = v:FindFirstChild("Amethyst")
-            if amethyst then
-                local button = amethyst:FindFirstChild("CrateButton")
-                if button then
-                    local amount = button:FindFirstChild("Amount")
-                    if amount and amount:IsA("TextLabel") then
-                        if amount.Text ~= "x0" then
-                            crate_amount.amethyst.amount = tonumber(amount.Text:match("x(%d+)")) or 0
-                            print("Amethyst crate amount changed to:", crate_amount.amethyst.amount)
-                        else 
-                            print("Amethyst crate amount is 0")
-                        end
-                    end
-                end
-            end
-        elseif v:IsA("ScrollingFrame") and v.Name == "Holiday" then
-            local holiday = v:FindFirstChild("Holiday")
-            if holiday then
-                local button = holiday:FindFirstChild("CrateButton")
-                if button then
-                    local amount = button:FindFirstChild("Amount")
-                    if amount.Text ~= "x0" then
-                        crate_amount.holiday.amount = tonumber(amount.Text:match("x(%d+)")) or 0
-                    end
-                end        
-            end    
-        elseif v:IsA("ScrollingFrame") and v.Name == "Radioactive" then
-            local radioactive = v:FindFirstChild("Radioactive")
-            if radioactive then
-                local button = radioactive:FindFirstChild("CrateButton")
-                if button then
-                    local amount = button:FindFirstChild("Amount")
-                    if amount:IsA("TextLabel") and amount.Text ~= "x0" then
-                        crate_amount.radioactive.amount = tonumber(amount.Text:match("x(%d+")) or 0
-                    end
-                end                    
-            end        
-        end 
-    end
-end
-
-local function yay()
-    -- Check if Amethyst crate has enough amount and spin it
-    if crate_amount.amethyst.amount >= 1 then
-        dospin("amethyst")  -- Only spin the Amethyst crate
-    end
-
-    -- Check if Infernal crate has enough amount and spin it
-    if crate_amount.infernal.amount >= 1 then
-        dospin("infernal")  -- Only spin the Infernal crate
-    end
-
-    if crate_amount.holiday.amount >= 1 then
-        dospin("holiday")
-    end
-
-    if crate_amount.radioactive.amount >= 1 then
-        dospin("radioactive")
-    end
-
-    -- Similarly, you can check for other crates (e.g., holiday, radioactive) if needed
-end
-
-local function loopCheckAndSpin()
-    while true do
-        check()  -- Perform the check to update crate amounts
-        yay()    -- Perform the spin for crates that meet the condition
-        task.wait(5)  -- Wait for 5 seconds before repeating (you can adjust this delay)
-    end
-end
-
--- Start the loop
-loopCheckAndSpin()
 
 -- Character handling
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -477,4 +316,155 @@ spawn(function()
     end
 end)
 
-print("maybe loaded")
+local function spin(args)
+    game:GetService("ReplicatedStorage"):WaitForChild("_NetworkServiceContainer"):WaitForChild("RollService"):FireServer(unpack(args))
+    task.wait(1)
+end
+
+-- Corrected arguments table to be iterated over
+local arguments = {
+    holiday = { "attemptAuraRoll", "holiday", true },
+    amethyst = { "attemptAuraRoll", "amethyst", true },
+    infernal = { "attemptAuraRoll", "infernal", true },
+    radioactive = { "attemptAuraRoll", "radioactive", true }
+}
+
+local crate_amount = {
+    infernal = { amount = 0 },
+    amethyst = { amount = 0 },
+    holiday = { amount = 0 },
+    radioactive = { amount = 0 }
+}
+
+local function dospin(crateName)
+    -- Only spin for the specific crate passed
+    local crateArgs = arguments[crateName]
+    if crateArgs then
+        spin(crateArgs)
+    else
+        print("No arguments found for crate: " .. crateName)
+    end
+end
+
+local function check()
+    for _, v in ipairs(hmm:GetChildren()) do
+        if v:IsA("ScrollingFrame") and v.Name == "Infernal" then
+            local infernal = v:FindFirstChild("Infernal")
+            if infernal then
+                local button = infernal:FindFirstChild("CrateButton")
+                if button then
+                    local amount = button:FindFirstChild("Amount")
+                    if amount and amount:IsA("TextLabel") then
+                        if amount.Text ~= "x0" then
+                            crate_amount.infernal.amount = tonumber(amount.Text:match("x(%d+)")) or 0
+                        else
+                            print("Infernal crate amount is 0")
+                        end
+                    end
+                end
+            end            
+        elseif v:IsA("ScrollingFrame") and v.Name == "Amethyst" then
+            local amethyst = v:FindFirstChild("Amethyst")
+            if amethyst then
+                local button = amethyst:FindFirstChild("CrateButton")
+                if button then
+                    local amount = button:FindFirstChild("Amount")
+                    if amount and amount:IsA("TextLabel") then
+                        if amount.Text ~= "x0" then
+                            crate_amount.amethyst.amount = tonumber(amount.Text:match("x(%d+)")) or 0
+                            print("Amethyst crate amount changed to:", crate_amount.amethyst.amount)
+                        else 
+                            print("Amethyst crate amount is 0")
+                        end
+                    end
+                end
+            end
+        elseif v:IsA("ScrollingFrame") and v.Name == "Holiday" then
+            local holiday = v:FindFirstChild("Holiday")
+            if holiday then
+                local button = holiday:FindFirstChild("CrateButton")
+                if button then
+                    local amount = button:FindFirstChild("Amount")
+                    if amount.Text ~= "x0" then
+                        crate_amount.holiday.amount = tonumber(amount.Text:match("x(%d+)")) or 0
+                    end
+                end        
+            end    
+        elseif v:IsA("ScrollingFrame") and v.Name == "Radioactive" then
+            local radioactive = v:FindFirstChild("Radioactive")
+            if radioactive then
+                local button = radioactive:FindFirstChild("CrateButton")
+                if button then
+                    local amount = button:FindFirstChild("Amount")
+                    if amount:IsA("TextLabel") and amount.Text ~= "x0" then
+                        crate_amount.radioactive.amount = tonumber(amount.Text:match("x(%d+)")) or 0
+                    end
+                end                    
+            end        
+        end 
+    end
+end
+
+local function yay()
+    -- Check if Amethyst crate has enough amount and spin it
+    if crate_amount.amethyst.amount >= 1 then
+        dospin("amethyst")  -- Only spin the Amethyst crate
+    end
+
+    -- Check if Infernal crate has enough amount and spin it
+    if crate_amount.infernal.amount >= 1 then
+        dospin("infernal")  -- Only spin the Infernal crate
+    end
+
+    if crate_amount.holiday.amount >= 1 then
+        dospin("holiday")
+    end
+
+    if crate_amount.radioactive.amount >= 1 then
+        dospin("radioactive")
+    end
+
+    -- Similarly, you can check for other crates (e.g., holiday, radioactive) if needed
+end
+
+local function loopCheckAndSpin()
+    while true do
+        check()  -- Perform the check to update crate amounts
+        yay()    -- Perform the spin for crates that meet the condition
+        task.wait(5)  -- Wait for 5 seconds before repeating (you can adjust this delay)
+    end
+end
+
+-- Start the loop
+loopCheckAndSpin()
+
+
+local candyamount = game:GetService("Players").LocalPlayer.PlayerGui.Main.Menus.HolidayEvent.Content:GetChildren()[9].Text
+
+-- Function to check your candy cane
+local argss = {
+{ "exchangeCandyCanes" }
+}
+
+local function check2()
+    if candyamount and candyamount:IsA("TextLabel") then
+        local candyAmountText = candyamount.Text:match("x(%d+)")  -- Extract the number after "x"
+        if candyAmountText then
+            local candyAmount = tonumber(candyAmountText)
+            if candyAmount and candyAmount >= 50 then
+                roll()  -- Proceed to roll if the candy amount is greater than or equal to 50
+            end
+        end
+    end
+end
+
+-- Function to roll holiday crate
+local function exchange(args)
+    game:GetService("ReplicatedStorage"):WaitForChild("_NetworkServiceContainer"):WaitForChild("InventoryService"):FireServer(unpack(args))
+    task.wait(0.1)
+end
+
+-- Call the exchange function
+for _, args in ipairs(argss) do
+    exchange(args)
+end
