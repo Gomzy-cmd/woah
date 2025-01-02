@@ -1,0 +1,444 @@
+-- Get the local player
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+local tweeningservice = game:GetService("TweenService")
+local hmm = game:GetService("Players").LocalPlayer.PlayerGui.Main.Menus.LootMenu:GetChildren()[5].ScrollingFrame
+
+
+local function spin(args)
+    game:GetService("ReplicatedStorage"):WaitForChild("_NetworkServiceContainer"):WaitForChild("RollService"):FireServer(unpack(args))
+    task.wait(1)
+end
+
+-- Corrected arguments table to be iterated over
+local arguments = {
+    holiday = { "attemptAuraRoll", "holiday", true },
+    amethyst = { "attemptAuraRoll", "amethyst", true },
+    infernal = { "attemptAuraRoll", "infernal", true },
+    radioactive = { "attemptAuraRoll", "radioactive", true }
+}
+
+local crate_amount = {
+    infernal = { amount = 0 },
+    amethyst = { amount = 0 },
+    holiday = { amount = 0 },
+    radioactive = { amount = 0 }
+}
+
+local function dospin(crateName)
+    -- Only spin for the specific crate passed
+    local crateArgs = arguments[crateName]
+    if crateArgs then
+        spin(crateArgs)
+    else
+        print("No arguments found for crate: " .. crateName)
+    end
+end
+
+local function check()
+    for _, v in ipairs(hmm:GetChildren()) do
+        if v:IsA("ScrollingFrame") and v.Name == "Infernal" then
+            local infernal = v:FindFirstChild("Infernal")
+            if infernal then
+                local button = infernal:FindFirstChild("CrateButton")
+                if button then
+                    local amount = button:FindFirstChild("Amount")
+                    if amount and amount:IsA("TextLabel") then
+                        if amount.Text ~= "x0" then
+                            crate_amount.infernal.amount = tonumber(amount.Text:match("x(%d+)")) or 0
+                        else
+                            print("Infernal crate amount is 0")
+                        end
+                    end
+                end
+            end            
+        elseif v:IsA("ScrollingFrame") and v.Name == "Amethyst" then
+            local amethyst = v:FindFirstChild("Amethyst")
+            if amethyst then
+                local button = amethyst:FindFirstChild("CrateButton")
+                if button then
+                    local amount = button:FindFirstChild("Amount")
+                    if amount and amount:IsA("TextLabel") then
+                        if amount.Text ~= "x0" then
+                            crate_amount.amethyst.amount = tonumber(amount.Text:match("x(%d+)")) or 0
+                            print("Amethyst crate amount changed to:", crate_amount.amethyst.amount)
+                        else 
+                            print("Amethyst crate amount is 0")
+                        end
+                    end
+                end
+            end
+        elseif v:IsA("ScrollingFrame") and v.Name == "Holiday" then
+            local holiday = v:FindFirstChild("Holiday")
+            if holiday then
+                local button = holiday:FindFirstChild("CrateButton")
+                if button then
+                    local amount = button:FindFirstChild("Amount")
+                    if amount.Text ~= "x0" then
+                        crate_amount.holiday.amount = tonumber(amount.Text:match("x(%d+)")) or 0
+                    end
+                end        
+            end    
+        elseif v:IsA("ScrollingFrame") and v.Name == "Radioactive" then
+            local radioactive = v:FindFirstChild("Radioactive")
+            if radioactive then
+                local button = radioactive:FindFirstChild("CrateButton")
+                if button then
+                    local amount = button:FindFirstChild("Amount")
+                    if amount:IsA("TextLabel") and amount.Text ~= "x0" then
+                        crate_amount.radioactive.amount = tonumber(amount.Text:match("x(%d+)")) or 0
+                    end
+                end                    
+            end        
+        end 
+    end
+end
+
+local function yay()
+    -- Check if Amethyst crate has enough amount and spin it
+    if crate_amount.amethyst.amount >= 1 then
+        dospin("amethyst")  -- Only spin the Amethyst crate
+    end
+
+    -- Check if Infernal crate has enough amount and spin it
+    if crate_amount.infernal.amount >= 1 then
+        dospin("infernal")  -- Only spin the Infernal crate
+    end
+
+    if crate_amount.holiday.amount >= 1 then
+        dospin("holiday")
+    end
+
+    if crate_amount.radioactive.amount >= 1 then
+        dospin("radioactive")
+    end
+
+    -- Similarly, you can check for other crates (e.g., holiday, radioactive) if needed
+end
+
+local function loopCheckAndSpin()
+    while true do
+        check()  -- Perform the check to update crate amounts
+        yay()    -- Perform the spin for crates that meet the condition
+        task.wait(5)  -- Wait for 5 seconds before repeating (you can adjust this delay)
+    end
+end
+
+-- Start the loop
+loopCheckAndSpin()
+
+-- Character handling
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+LocalPlayer.CharacterAdded:Connect(function(character)
+    Character = character
+end)
+
+-- Chest positions table
+local chestpositions = {
+    candyCane = { X = 0, Y = 0, Z = 0 },
+    infernal = { X = 0, Y = 0, Z = 0 },
+    radioactive = { X = 0, Y = 0, Z = 0 },
+    holiday = { X = 0, Y = 0, Z = 0 },
+    amethyst = { X = 0, Y = 0, Z = 0 },
+    ultraluck = { X = 0, Y = 0, Z = 0 },
+    luck = { X = 0, Y = 0, Z = 0 },
+    cosmic = { X = 0, Y = 0, Z = 0 },
+    onyx = { X = 0, Y = 0, Z = 0 },
+    ruby = { X = 0, Y = 0, Z = 0 }
+}
+
+-- Variables to track teleport status and chest presence
+local candyCaneTeleported = false
+local infernalTeleported = false
+local amethystTeleported = false
+local holidayTeleported = false
+local radioactiveTeleported = false
+local ultraluckTeleported = false
+local luckTeleported = false
+local cosmicTeleported = false
+local onyxTeleported = false
+local rubyTeleported = false
+
+
+local candyCaneExists = false
+local infernalExists = false
+local amethystExists = false
+local holidayExists = false
+local radioactiveExists = false
+local ultraLuckExists = false
+local luckExists = false
+local cosmicExists = false
+local onyxExists = false
+local rubyExists = false
+
+-- Function to find chest positions
+local function setchestpositions()
+    local foundCandyCane = false
+    local foundInfernal = false
+    local foundAmethyst = false
+    local foundHoliday = false
+    local foundRadioactive = false
+    local foundultra = false
+    local foundluck = false
+    local foundcosmic = false
+    local foundonyx = false
+    local foundruby = false
+
+for _, v in pairs(Workspace:GetChildren()) do
+    if v:IsA("Model") and v.Name == "candyCane" then
+        foundCandyCane = true
+        local root = v:FindFirstChild("Root")
+        if root and root:IsA("BasePart") then
+            chestpositions.candyCane.X, chestpositions.candyCane.Y, chestpositions.candyCane.Z = root.Position.X, root.Position.Y, root.Position.Z
+        end
+    elseif v:IsA("Model") and v.Name == "infernal" then
+        foundInfernal = true
+        local root = v:FindFirstChild("Root")
+        if root and root:IsA("BasePart") then
+            chestpositions.infernal.X, chestpositions.infernal.Y, chestpositions.infernal.Z = root.Position.X, root.Position.Y, root.Position.Z
+        end
+    elseif v:IsA("Model") and v.Name == "amethyst" then
+        foundAmethyst = true
+        local root = v:FindFirstChild("Root")
+        if root and root:IsA("BasePart") then
+            chestpositions.amethyst.X, chestpositions.amethyst.Y, chestpositions.amethyst.Z = root.Position.X, root.Position.Y, root.Position.Z
+        end
+    elseif v:IsA("Model") and v.Name == "holiday" then
+        foundHoliday = true
+        local root = v:FindFirstChild("Root")
+        if root and root:IsA("BasePart") then
+            chestpositions.holiday.X, chestpositions.holiday.Y, chestpositions.holiday.Z = root.Position.X, root.Position.Y, root.Position.Z
+        end
+    elseif v:IsA("Model") and v.Name == "radioactive" then
+        foundRadioactive = true
+        local root = v:FindFirstChild("Root")
+        if root and root:IsA("BasePart") then
+            chestpositions.radioactive.X, chestpositions.radioactive.Y, chestpositions.radioactive.Z = root.Position.X, root.Position.Y, root.Position.Z
+        end
+    elseif v:IsA("Model") and v.Name == "ultraLuckPotion" then
+        foundultra = true
+        local root = v:FindFirstChild("Root")
+        if root and root:IsA("BasePart") then
+            chestpositions.ultraluck.X, chestpositions.ultraluck.Y, chestpositions.ultraluck.Z = root.Position.X, root.Position.Y, root.Position.Z
+        end
+    elseif v:IsA("Model") and v.Name == "luckPotion" then
+        foundluck = true
+        local root = v:FindFirstChild("Root")
+        if root and root:IsA("BasePart") then
+            chestpositions.luck.X, chestpositions.luck.Y, chestpositions.luck.Z = root.Position.X, root.Position.Y, root.Position.Z
+        end
+    elseif v:IsA("Model") and v.Name == "cosmicWish" then
+        foundcosmic = true
+        local root = v:FindFirstChild("Root")
+        if root and root:IsA("BasePart") then
+            chestpositions.cosmic.X, chestpositions.cosmic.Y, chestpositions.cosmic.Z = root.Position.X, root.Position.Y, root.Position.Z
+        end
+    elseif v:IsA("Model") and v.Name == "onyx" then
+        foundonyx = true
+        local root = v:FindFirstChild("Root")
+        if root and root:IsA("BasePart") then
+            chestpositions.onyx.X, chestpositions.onyx.Y, chestpositions.onyx.Z = root.Position.X, root.Position.Y, root.Position.Z
+        end
+    elseif v:IsA("Model") and v.Name == "ruby" then
+        foundruby = true
+        local root = v:FindFirstChild("Root")
+        if root and root:IsA("BasePart") then
+            chestpositions.ruby.X, chestpositions.ruby.Y, chestpositions.ruby.Z = root.Position.X, root.Position.Y, root.Position.Z
+        end
+    end
+end
+
+    -- Update chest existence statuses
+    if foundCandyCane and not candyCaneExists then
+        print("CandyCane respawned!")
+        candyCaneExists = true
+        candyCaneTeleported = false
+    elseif not foundCandyCane then
+        candyCaneExists = false
+    end
+
+    if foundInfernal and not infernalExists then
+        print("Infernal respawned!")
+        infernalExists = true
+        infernalTeleported = false
+    elseif not foundInfernal then
+        infernalExists = false
+    end
+
+    if foundAmethyst and not amethystExists then
+        print("Amethyst respawned!")
+        amethystExists = true
+        amethystTeleported = false
+    elseif not foundAmethyst then
+        amethystExists = false
+    end
+
+    if foundHoliday and not holidayExists then
+        print("holiday respawned")
+        holidayExists = true
+        holidayTeleported = false
+    elseif not foundHoliday then
+        holidayExists = false
+    end
+
+    if foundRadioactive and not radioactiveExists then
+        print("found radicotive")
+        radioactiveExists = true
+        radioactiveTeleported = false
+    elseif not foundRadioactive then
+        radioactiveExists = false
+    end
+    
+    if foundultra and not ultraLuckExists then
+        print("foiund luck2")
+        ultraLuckExists = true
+        ultraluckTeleported = false
+    elseif not foundultra then
+        ultraLuckExists = false
+    end
+
+     if foundluck and not luckExists then
+         print("yay")
+         luckExists = true
+         luckTeleported = false
+    elseif not foundluck then
+        luckExists = false
+    end
+
+    if foundcosmic and not cosmicExists then
+        print("wow")
+        cosmicExists = true
+        cosmicTeleported = false
+    elseif not foundcosmic then
+        cosmicExists = false
+    end
+
+    if foundonyx and not onyxExists then
+        print("ok")
+        onyxExists = true
+        onyxTeleported = false
+    elseif not foundonyx then
+        onyxExists = false
+    end
+
+    if foundruby and not rubyExists then
+        print("ruby")
+        rubyExists = true
+        rubyTeleported = false
+    elseif not foundruby then
+        rubyExists = false
+    end
+end
+
+-- Function to teleport to a chest for a duration
+local function teleportToChest(chestName)
+    local duration = 4 -- Duration to teleport for
+    local startTime = os.clock()
+
+    while os.clock() - startTime < duration do
+        setchestpositions()
+        if chestpositions[chestName] and chestpositions[chestName].Y then
+            Character.HumanoidRootPart.CFrame = CFrame.new(
+                chestpositions[chestName].X,
+                chestpositions[chestName].Y,
+                chestpositions[chestName].Z
+            )
+            wait(1) -- Teleport every 0.1 seconds
+        else
+            break -- Stop if chest position is invalid
+        end
+    end
+
+    print("Finished teleporting to", chestName)
+end
+
+-- Individual teleport functions
+local function teleporttocandy()
+    if not candyCaneTeleported and candyCaneExists then
+        teleportToChest("candyCane")
+        candyCaneTeleported = true
+    end
+end
+
+local function teleporttoinfernal()
+    if not infernalTeleported and infernalExists then
+        teleportToChest("infernal")
+        infernalTeleported = true
+    end
+end
+
+local function teleporttoamethyst()
+    if not amethystTeleported and amethystExists then
+        teleportToChest("amethyst")
+        amethystTeleported = true
+    end
+end
+
+local function teleporttoholiday()
+    if not holidayTeleported and holidayExists then
+        teleportToChest("holiday")
+        holidayTeleported = true
+    end
+end
+
+local function teleporttoradioactive()
+    if not radioactiveTeleported and radioactiveExists then
+        teleportToChest("radioactive")
+        radioactiveTeleported = true
+    end
+end
+
+local function teleporttoultraluck()
+    if not ultraluckTeleported and ultraLuckExists then
+        teleportToChest("ultraluck")
+        ultraluckTeleported = true
+    end
+end
+
+local function teleporttoluck()
+    if not luckTeleported and luckExists then
+        teleportToChest("luck")
+        luckTeleported = true
+    end
+end
+
+local function teleporttocosmic()
+    if not cosmicTeleported and cosmicExists then
+        teleportToChest("cosmic")
+        cosmicTeleported = true
+    end
+end
+
+local function teleporttoonyx()
+    if not onyxTeleported and onyxExists then
+        teleportToChest("onyx")
+        onyxTeleported = true
+    end
+end
+
+local function teleporttoruby()
+    if not rubyTeleported and rubyExists then
+        teleportToChest("ruby")
+        rubyTeleported = true
+    end
+end    
+
+-- Main loop to continuously check for chests and teleport
+spawn(function()
+    while true do
+        setchestpositions() -- Update chest positions and existence statuses
+        teleporttocandy()   -- Attempt to teleport to candyCane if it's available
+        teleporttoinfernal() -- Attempt to teleport to infernal if it's available
+        teleporttoamethyst() -- Attempt to teleport to amethyst if it's available
+        teleporttoholiday()
+        teleporttoradioactive()
+        teleporttoultraluck()
+        teleporttoluck()
+        teleporttoonyx()
+        teleporttoruby()
+        wait(1) -- Wait 1 second before repeating the loop
+    end
+end)
+
+print("wait")
